@@ -1004,7 +1004,7 @@ def train(dim_word=100,  # word vector dimensionality
           optimizer='rmsprop',
           batch_size=16,
           valid_batch_size=16,
-          saveto='model.npz',
+          saveto=None,
           validFreq=1000,
           saveFreq=1000,   # save the parameters after every saveFreq updates
           sampleFreq=100,   # generate some samples after every sampleFreq
@@ -1017,6 +1017,7 @@ def train(dim_word=100,  # word vector dimensionality
     datasets = datasets or [config.train_en_tok, config.train_fr_tok]
     valid_datasets = valid_datasets or [config.valid_en_tok, config.train_fr_tok]
     dictionaries = dictionaries or [config.dicts_en_tok, config.dicts_fr_tok]
+    saveto = saveto or '/Users/cinjon/Code/research/dl4mt-cinjon/models/model.npz'
 
     # Model options
     model_options = locals().copy()
