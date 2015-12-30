@@ -7,7 +7,7 @@ import tarfile
 import urllib2
 
 TRAIN_DATA_URL = 'http://www.statmt.org/europarl/v7/fr-en.tgz'
-VALID_DATA_URL = 'http://matrix.statmt.org/test_sets/newstest2011.tgz'
+VALID_DATA_URL = 'http://matrix.statmt.org/test_sets/newstest2013.tgz'
 
 parser = argparse.ArgumentParser(
     description="""
@@ -16,10 +16,10 @@ indicators. Adapted from,
 https://github.com/orhanf/blocks-examples/tree/master/machine_translation
 """, formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("-s", "--source", type=str, help="Source language",
-                    default="cs")
+                    default="fr")
 parser.add_argument("-t", "--target", type=str, help="Target language",
                     default="en")
-parser.add_argument("--source-dev", type=str, default="newstest2013.cs",
+parser.add_argument("--source-dev", type=str, default="newstest2013.fr",
                     help="Source language dev filename")
 parser.add_argument("--target-dev", type=str, default="newstest2013.en",
                     help="Target language dev filename")

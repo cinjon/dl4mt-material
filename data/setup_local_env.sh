@@ -1,13 +1,13 @@
 #!/bin/bash -x
-# This script sets up development and data environments for 
+# This script sets up development and data environments for
 # a local machine, copy under your home directory and run.
 # Note that, Theano is NOT installed by this script.
 
 # code directory for cloned repositories
 CODE_DIR=${HOME}/codes/dl4mt-material
 
-# code repository 
-CODE_CENTRAL=https://github.com/kyunghyuncho/dl4mt-material
+# code repository
+CODE_CENTRAL=https://github.com/cinjon/dl4mt-material
 
 # our input files will reside here
 DATA_DIR=${HOME}/data
@@ -25,13 +25,13 @@ fi
 # download the europarl v7 and validation sets and extract
 python ${CODE_DIR}/data/download_files.py \
     -s='fr' -t='en' \
-    --source-dev=newstest2011.fr \
-    --target-dev=newstest2011.en \
+    --source-dev=newstest2013.fr \
+    --target-dev=newstest2013.en \
     --outdir=${DATA_DIR}
 
 # tokenize corresponding files
-perl ${CODE_DIR}/data/tokenizer.perl -l 'fr' < ${DATA_DIR}/test2011/newstest2011.fr > ${DATA_DIR}/newstest2011.fr.tok
-perl ${CODE_DIR}/data/tokenizer.perl -l 'en' < ${DATA_DIR}/test2011/newstest2011.en > ${DATA_DIR}/newstest2011.en.tok
+perl ${CODE_DIR}/data/tokenizer.perl -l 'fr' < ${DATA_DIR}/test2013/newstest2013.fr > ${DATA_DIR}/newstest2013.fr.tok
+perl ${CODE_DIR}/data/tokenizer.perl -l 'en' < ${DATA_DIR}/test2013/newstest2013.en > ${DATA_DIR}/newstest2013.en.tok
 perl ${CODE_DIR}/data/tokenizer.perl -l 'fr' < ${DATA_DIR}/europarl-v7.fr-en.fr > ${DATA_DIR}/europarl-v7.fr-en.fr.tok
 perl ${CODE_DIR}/data/tokenizer.perl -l 'en' < ${DATA_DIR}/europarl-v7.fr-en.en > ${DATA_DIR}/europarl-v7.fr-en.en.tok
 
@@ -39,7 +39,7 @@ perl ${CODE_DIR}/data/tokenizer.perl -l 'en' < ${DATA_DIR}/europarl-v7.fr-en.en 
 python ${CODE_DIR}/data/build_dictionary.py ${DATA_DIR}/europarl-v7.fr-en.fr.tok
 python ${CODE_DIR}/data/build_dictionary.py ${DATA_DIR}/europarl-v7.fr-en.en.tok
 
-# create model output directory if it does not exist 
+# create model output directory if it does not exist
 if [ ! -d "${MODELS_DIR}" ]; then
     mkdir -p ${MODELS_DIR}
 fi
