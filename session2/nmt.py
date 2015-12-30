@@ -18,8 +18,10 @@ import time
 from collections import OrderedDict
 
 from data_iterator import TextIterator
+import config
 
 profile = False
+
 
 
 # push parameters to Theano shared variables
@@ -643,7 +645,7 @@ def build_model(tparams, options):
     logit = tensor.tanh(logit_lstm+logit_prev+logit_ctx)
     if options['use_dropout']:
         logit = dropout_layer(logit, use_noise, trng)
-    logit = get_layer('ff')[1](tparams, logit, options, 
+    logit = get_layer('ff')[1](tparams, logit, options,
                                prefix='ff_logit', activ='linear')
     logit_shp = logit.shape
     probs = tensor.nnet.softmax(logit.reshape([logit_shp[0]*logit_shp[1],
@@ -1006,16 +1008,15 @@ def train(dim_word=100,  # word vector dimensionality
           validFreq=1000,
           saveFreq=1000,   # save the parameters after every saveFreq updates
           sampleFreq=100,   # generate some samples after every sampleFreq
-          datasets=[
-              '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok',
-              '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok'],
-          valid_datasets=['../data/dev/newstest2011.en.tok',
-                          '../data/dev/newstest2011.fr.tok'],
-          dictionaries=[
-              '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.en.tok.pkl',
-              '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
+          datasets=None,
+          valid_datasets=None,
+          dictionaries=None,
           use_dropout=False,
           reload_=False):
+
+    datasets = datasets or [config.train_en_tok, config.train_fr_tok]
+    valid_datasets = valid_datasets or [config.valid_en_tok, config.train_fr_tok]
+    dictionaries = dictionaries or [config.dicts_en_tok, config.dicts_fr_tok]
 
     # Model options
     model_options = locals().copy()
