@@ -1,6 +1,6 @@
 import os
 
-base_dir = '/Users/cinjon/Code/research/dl4mt-cinjon/'
+base_dir = '/home/ubuntu/research/dl4mt-material/'
 
 train_en_tok = os.path.join(base_dir, 'files', 'europarl-v7.fr-en.en.tok')
 train_fr_tok = os.path.join(base_dir, 'files', 'europarl-v7.fr-en.fr.tok')

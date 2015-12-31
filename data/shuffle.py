@@ -5,8 +5,6 @@ import random
 from tempfile import mkstemp
 from subprocess import call
 
-
-
 def main(files):
 
     tf_os, tpath = mkstemp()

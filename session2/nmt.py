@@ -23,7 +23,6 @@ import config
 profile = False
 
 
-
 # push parameters to Theano shared variables
 def zipp(params, tparams):
     for kk, vv in params.iteritems():
@@ -1017,7 +1016,11 @@ def train(dim_word=100,  # word vector dimensionality
     datasets = datasets or [config.train_en_tok, config.train_fr_tok]
     valid_datasets = valid_datasets or [config.valid_en_tok, config.train_fr_tok]
     dictionaries = dictionaries or [config.dicts_en_tok, config.dicts_fr_tok]
-    saveto = saveto or '/Users/cinjon/Code/research/dl4mt-cinjon/models/model.npz'
+    if not saveto:
+        _savedir = '/home/ubuntu/Dropbox/research/dl4mt-material'
+        if not os.path.exists(_savedir):
+            os.makedirs(_savedir)
+        saveto = os.path.join(_savedir, 'model.npz')
 
     # Model options
     model_options = locals().copy()

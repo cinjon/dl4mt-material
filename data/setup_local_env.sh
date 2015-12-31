@@ -4,7 +4,7 @@
 # Note that, Theano is NOT installed by this script.
 
 # code directory for cloned repositories
-CODE_DIR=/Users/cinjon/Code/research/dl4mt-cinjon
+CODE_DIR=/home/ubuntu/research/dl4mt-material
 
 # code repository
 CODE_CENTRAL=https://github.com/cinjon/dl4mt-material
