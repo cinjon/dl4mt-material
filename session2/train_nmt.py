@@ -19,8 +19,8 @@ def main(job_id, params):
                      batch_size=32,
                      valid_batch_size=32,
                      validFreq=5000,
-                     dispFreq=100,
-                     saveFreq=5000,
+                     dispFreq=250,
+                     saveFreq=2500,
                      sampleFreq=1000,
                      use_dropout=params['use-dropout'][0])
     return validerr
