@@ -457,6 +457,7 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
         pctx__ = tensor.tanh(pctx__)
         alpha = tensor.dot(pctx__, U_att)+c_tt
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
+        alpha = alpha - alpha.max(0)[None,:]
         alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
