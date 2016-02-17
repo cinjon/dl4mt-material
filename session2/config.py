@@ -1,12 +1,13 @@
 import os
 
-base_dir = '/home/ubuntu/research/dl4mt-material/'
+base_dir = '/home/cinjon/Code/dl4mt-material/'
+files_dir = os.path.join(base_dir, 'files')
 
-train_en_tok = os.path.join(base_dir, 'files', 'europarl-v7.fr-en.en.tok.shuf')
-train_fr_tok = os.path.join(base_dir, 'files', 'europarl-v7.fr-en.fr.tok.shuf')
+train_src_tok = os.path.join(files_dir, 'train', 'all_en-de.en.tok.shuf')
+train_trg_tok = os.path.join(files_dir, 'train', 'all_en-de.de.tok.shuf')
 
-valid_en_tok = os.path.join(base_dir, 'files', 'newstest2013.en.tok.shuf')
-valid_fr_tok = os.path.join(base_dir, 'files', 'newstest2013.fr.tok.shuf')
+valid_src_tok = os.path.join(files_dir, 'valid', 'newstest-dev-08-10-12.en-de.en.tok.shuf')
+valid_trg_tok = os.path.join(files_dir, 'valid', 'newstest-dev-08-10-12.en-de.de.tok.shuf')
 
-dicts_en_tok = os.path.join(base_dir, 'files', 'europarl-v7.fr-en.en.tok.shuf.pkl')
-dicts_fr_tok = os.path.join(base_dir, 'files', 'europarl-v7.fr-en.fr.tok.shuf.pkl')
+dicts_src_tok = os.path.join(files_dir, 'dicts', 'all_en-de.en.tok.shuf.pkl')
+dicts_trg_tok = os.path.join(files_dir, 'dicts', 'all_en-de.de.tok.shuf.pkl')

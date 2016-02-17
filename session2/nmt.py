@@ -1005,6 +1005,7 @@ def train(dim_word=100,  # word vector dimensionality
           batch_size=16,
           valid_batch_size=16,
           saveto=None,
+          loadfrom=None,
           validFreq=1000,
           saveFreq=1000,   # save the parameters after every saveFreq updates
           sampleFreq=100,   # generate some samples after every sampleFreq
@@ -1012,13 +1013,14 @@ def train(dim_word=100,  # word vector dimensionality
           valid_datasets=None,
           dictionaries=None,
           use_dropout=False,
-          reload_=False):
+          reload_=False,
+          write_=False):
 
-    datasets = datasets or [config.train_en_tok, config.train_fr_tok]
-    valid_datasets = valid_datasets or [config.valid_en_tok, config.train_fr_tok]
-    dictionaries = dictionaries or [config.dicts_en_tok, config.dicts_fr_tok]
+    datasets = datasets or [config.train_src_tok, config.train_trg_tok]
+    valid_datasets = valid_datasets or [config.valid_src_tok, config.train_trg_tok]
+    dictionaries = dictionaries or [config.dicts_src_tok, config.dicts_trg_tok]
     if not saveto:
-        _savedir = '/home/ubuntu/Dropbox/research/dl4mt-material'
+        _savedir = '/home/cinjon/Dropbox/research/dl4mt-material/german'
         if not os.path.exists(_savedir):
             os.makedirs(_savedir)
         saveto = os.path.join(_savedir, 'model.npz')
@@ -1038,6 +1040,7 @@ def train(dim_word=100,  # word vector dimensionality
 
     # reload options
     if reload_ and os.path.exists(saveto):
+        print 'Loading options from %s.pkl...' % saveto
         with open('%s.pkl' % saveto, 'rb') as f:
             models_options = pkl.load(f)
 
@@ -1057,6 +1060,7 @@ def train(dim_word=100,  # word vector dimensionality
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
+        print 'Loading params from %s...' % saveto
         params = load_params(saveto, params)
 
     tparams = init_tparams(params)
@@ -1070,6 +1074,14 @@ def train(dim_word=100,  # word vector dimensionality
 
     print 'Buliding sampler'
     f_init, f_next = build_sampler(tparams, model_options, trng)
+
+    if write_:
+        print 'WRITING'
+        write_output(write_, valid, tparams, f_init, f_next, model_options,
+                     n_words_src, n_words, trng, 1, 50, True, False,
+                     worddicts_r[1])
+        return
+    print 'NOT WRITING'
 
     # before any regularizer
     print 'Building f_log_probs...',
@@ -1129,7 +1141,7 @@ def train(dim_word=100,  # word vector dimensionality
     if reload_ and os.path.exists(saveto):
         history_errs = list(numpy.load(saveto)['history_errs'])
     best_p = None
-    bad_count = 0
+    bad_counter = 0
 
     if validFreq == -1:
         validFreq = len(train[0])/batch_size
@@ -1284,6 +1296,42 @@ def train(dim_word=100,  # word vector dimensionality
 
     return valid_err
 
+def write_output(fout, data, tparams, f_init, f_next, model_options,
+                 n_words_src, n_words, trng, k, maxlen, stochastic, argmax, 
+                 reverse_dict):
+    predicted_fout = open(fout + '.predicted', 'wb')
+    actual_fout = open(fout + '.actual', 'wb')
+
+    for x, y in data:
+        x, x_mask, y, y_mask = prepare_data(x, y, maxlen=maxlen,
+                                            n_words_src=n_words_src,
+                                            n_words=n_words)        
+        if x is None:
+            print 'Minibatch with zero sample under length ', maxlen
+            continue
+
+        for sent_index in xrange(x.shape[1]):
+            y_sent = y[:, sent_index]
+            sample, score = gen_sample(
+                tparams, f_init, f_next, x[:, sent_index][:, None],
+                model_options, trng=trng, k=k, maxlen=maxlen, stochastic=stochastic,
+                argmax=argmax)
+
+            for index, word in enumerate(sample):
+                if word == 0:
+                    break
+            sample = sample[:index]
+
+            predicted_fout.write(
+                ' '.join([reverse_dict.get(word, 'UNK') for word in sample]) + '\n'
+            )
+            actual_fout.write(
+                ' '.join([reverse_dict.get(word, 'UNK') for word in y_sent]) + '\n'
+            )
+    
+    predicted_fout.close()
+    actual_fout.close()
+                                       
 
 if __name__ == '__main__':
     pass

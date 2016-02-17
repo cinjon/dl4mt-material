@@ -22,18 +22,21 @@ def main(job_id, params):
                      dispFreq=250,
                      saveFreq=2500,
                      sampleFreq=1000,
-                     use_dropout=params['use-dropout'][0])
+                     use_dropout=params['use-dropout'][0],
+                     write_=params['write_'])
     return validerr
 
 if __name__ == '__main__':
     main(0, {
         'model': [None],
-        'dim_word': [500],
+        'dim_word': [512],
         'dim': [1024],
-        'n-words': [30000],
+        'n-words': [50000],
         'optimizer': ['adadelta'],
         'decay-c': [0.],
         'clip-c': [1.],
-        'use-dropout': [True],
+        'use-dropout': [False],
         'learning-rate': [0.0001],
-        'reload': [True]})
+        'reload': [True],
+        # 'write_': '/home/cinjon/Dropbox/research/dl4mt-material/valid-output'})
+        'write_': None})
