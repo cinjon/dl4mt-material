@@ -2,6 +2,7 @@
 Translates a source file using a translation model.
 '''
 import argparse
+import datetime
 
 import numpy
 import cPickle as pkl
@@ -12,7 +13,7 @@ from nmt import (build_sampler, gen_sample, load_params,
 from multiprocessing import Process, Queue
 
 
-def translate_model(queue, rqueue, pid, model, options, k, normalize):
+def translate_model(queue, rqueue, pid, model, options, k, normalize, annotations_only):
 
     from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
     trng = RandomStreams(1234)
@@ -25,21 +26,27 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     tparams = init_tparams(params)
 
     # word index
-    f_init, f_next = build_sampler(tparams, options, trng)
+    # f_init outs are [init_state (to decoder), ctx (from encoder)]
+    # f_next outs are [next_probs, next_sample, next_state] (decoder)
+    f_init, f_next = build_sampler(tparams, options, trng, annotations_only)
 
     def _translate(seq):
         # sample given an input sequence and obtain scores
-        sample, score = gen_sample(tparams, f_init, f_next,
-                                   numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, k=k, maxlen=200,
-                                   stochastic=False, argmax=False)
+        if annotations_only:
+            next_state, ctx = f_init(numpy.array(seq).reshape([len(seq), 1]))
+            return ctx
+        else:
+            sample, score = gen_sample(tparams, f_init, f_next,
+                                       numpy.array(seq).reshape([len(seq), 1]),
+                                       options, trng=trng, k=k, maxlen=200,
+                                       stochastic=False, argmax=False)
 
-        # normalize scores according to sequence lengths
-        if normalize:
-            lengths = numpy.array([len(s) for s in sample])
-            score = score / lengths
-        sidx = numpy.argmin(score)
-        return sample[sidx]
+            # normalize scores according to sequence lengths
+            if normalize:
+                lengths = numpy.array([len(s) for s in sample])
+                score = score / lengths
+            sidx = numpy.argmin(score)
+            return sample[sidx]
 
     while True:
         req = queue.get()
@@ -47,7 +54,6 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
             break
 
         idx, x = req[0], req[1]
-        print pid, '-', idx
         seq = _translate(x)
 
         rqueue.put((idx, seq))
@@ -56,7 +62,8 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
 
 
 def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
-         normalize=False, n_process=5, chr_level=False):
+         normalize=False, n_process=5, chr_level=False,
+         annotations_only=False, max_lines=None):
 
     # load model model_options
     with open('%s.pkl' % model, 'rb') as f:
@@ -87,7 +94,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
     for midx in xrange(n_process):
         processes[midx] = Process(
             target=translate_model,
-            args=(queue, rqueue, midx, model, options, k, normalize))
+            args=(queue, rqueue, midx, model, options, k, normalize, annotations_only))
         processes[midx].start()
 
     # utility function
@@ -105,6 +112,9 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
     def _send_jobs(fname):
         with open(fname, 'r') as f:
             for idx, line in enumerate(f):
+                if max_lines and idx == max_lines:
+                    print 'Breaking because we reached the max_lines'
+                    return idx
                 if chr_level:
                     words = list(line.decode('utf-8').strip())
                 else:
@@ -122,18 +132,27 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
     def _retrieve_jobs(n_samples):
         trans = [None] * n_samples
         for idx in xrange(n_samples):
-            resp = rqueue.get()
-            trans[resp[0]] = resp[1]
+            ridx, rseq = rqueue.get()
+            trans[ridx] = rseq
             if numpy.mod(idx, 10) == 0:
                 print 'Sample ', (idx+1), '/', n_samples, ' Done'
         return trans
 
-    print 'Translating ', source_file, '...'
     n_samples = _send_jobs(source_file)
-    trans = _seqs2words(_retrieve_jobs(n_samples))
+    trans = _retrieve_jobs(n_samples)
+    if not annotations_only:
+        print 'Running seqs2words because annotations_only is false.'
+        trans = _seqs2words(trans)
     _finish_processes()
-    with open(saveto, 'w') as f:
-        print >>f, '\n'.join(trans)
+    print 'Writing trans.'
+    if annotations_only:
+        numpy.set_printoptions(threshold=numpy.nan)
+        trans = numpy.array(trans)
+        numpy.savez(open(saveto + '.npz', 'w'), trans)
+    else:
+        with open(saveto, 'w') as f:
+            print 'Printing translations to', saveto
+            print >>f, '\n'.join(trans)
     print 'Done'
 
 
@@ -148,9 +167,17 @@ if __name__ == "__main__":
     parser.add_argument('dictionary_target', type=str)
     parser.add_argument('source', type=str)
     parser.add_argument('saveto', type=str)
+    # get just the embedding annotations and save them to "saveto"
+    parser.add_argument('-annotations', action="store_true", default=False)
+    parser.add_argument('-max_lines', type=int, default=0)
 
     args = parser.parse_args()
+    print args
 
+    start = datetime.datetime.utcnow()
+    print 'Started at ', start
     main(args.model, args.dictionary, args.dictionary_target, args.source,
          args.saveto, k=args.k, normalize=args.n, n_process=args.p,
-         chr_level=args.c)
+         chr_level=args.c, annotations_only=args.annotations, max_lines=args.max_lines)
+    end = datetime.datetime.utcnow()
+    print 'Time to finish -->', end - start

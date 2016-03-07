@@ -662,7 +662,7 @@ def build_model(tparams, options):
 
 
 # build a sampler
-def build_sampler(tparams, options, trng):
+def build_sampler(tparams, options, trng, only_init=False):
     x = tensor.matrix('x', dtype='int64')
     xr = x[::-1]
     n_timesteps = x.shape[0]
@@ -693,6 +693,9 @@ def build_sampler(tparams, options, trng):
     outs = [init_state, ctx]
     f_init = theano.function([x], outs, name='f_init', profile=profile)
     print 'Done'
+    if only_init:
+        print 'Returning f_init only.'
+        return f_init, None
 
     # x: 1 x 1
     y = tensor.vector('y_sampler', dtype='int64')
@@ -1335,3 +1338,25 @@ def write_output(fout, data, tparams, f_init, f_next, model_options,
 
 if __name__ == '__main__':
     pass
+
+
+# with open('./english09.test.lab.sents.birnn-embedFile', 'wb') as f:
+#     for sent_num, (line, arr) in enumerate(zip(lines, np_arrs)):
+#         for word_num, word in enumerate(line.split(' ')):
+#             word_vector = [str(x) for x in arr[word_num][0]]
+#             output = '%s_%d_%d' % (word, sent_num, word_num)
+#             output = ' '.join([output] + word_vector)
+#             f.write(output + '\n')
+
+# sentence = 0
+# word = 0
+# newlines = []
+# for l in lines:
+#     if not l or l[0] == '':
+#         newlines.append(l)
+#         sentence += 1
+#         word = 0
+#     else:
+#         newlines.append([k for k in l])
+#         newlines[-1][1] += '_%d_%d' % (sentence, word)
+#         word += 1
